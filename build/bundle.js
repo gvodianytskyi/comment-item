@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 8);
+/******/ 	return __webpack_require__(__webpack_require__.s = 10);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -90,13 +90,17 @@ var _app = __webpack_require__(5);
 
 var _app2 = _interopRequireDefault(_app);
 
-var _items = __webpack_require__(6);
+var _items = __webpack_require__(8);
 
 var _items2 = _interopRequireDefault(_items);
 
+var _comments = __webpack_require__(7);
+
+var _comments2 = _interopRequireDefault(_comments);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var components = exports.components = angular.module('components', []).component('app', _app2.default).component('items', _items2.default);
+var components = exports.components = angular.module('components', []).component('app', _app2.default).component('items', _items2.default).component('comments', _comments2.default);
 
 /***/ }),
 /* 2 */
@@ -110,17 +114,21 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.services = undefined;
 
-var _items = __webpack_require__(9);
+var _items = __webpack_require__(12);
 
 var _items2 = _interopRequireDefault(_items);
 
-var _utils = __webpack_require__(10);
+var _utils = __webpack_require__(13);
 
 var _utils2 = _interopRequireDefault(_utils);
 
+var _comments = __webpack_require__(11);
+
+var _comments2 = _interopRequireDefault(_comments);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var services = exports.services = angular.module('services', []).factory('itemsSrv', _items2.default.createInstance).factory('utilsSrv', _utils2.default.createInstance);
+var services = exports.services = angular.module('services', []).factory('utilsSrv', _utils2.default.createInstance).factory('commentsSrv', _comments2.default.createInstance).factory('itemsSrv', _items2.default.createInstance);
 
 /***/ }),
 /* 3 */
@@ -33510,11 +33518,69 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var AppController = exports.AppController = function AppController() {
-    _classCallCheck(this, AppController);
-};
+var AppController = exports.AppController = function () {
+    function AppController(itemsSrv, commentsSrv) {
+        _classCallCheck(this, AppController);
+
+        this.itemsSrv = itemsSrv;
+        this.commentsSrv = commentsSrv;
+        this.items = this.itemsSrv.getData();
+        this.activeItemId = this.items[0] ? this.items[0].id : null;
+        this.comments = this.activeItemId > 0 ? this.commentsSrv.getComments(this.activeItemId) : null;
+    }
+
+    _createClass(AppController, [{
+        key: 'addComment',
+        value: function addComment(event, comment) {
+            var itemId = this.getActiveItemId();
+            if (event.which !== 13) {
+                return;
+            }
+            if (comment) {
+                this.commentsSrv.add(comment, itemId);
+                this.comments = this.getComments(this.getActiveItemId());
+                this.comment = '';
+            }
+            event.preventDefault();
+        }
+    }, {
+        key: 'addItem',
+        value: function addItem(item) {
+            var newItemId = this.itemsSrv.add(item);
+            this.items = this.itemsSrv.getData();
+            this.activeItemId = newItemId;
+            this.comments = this.commentsSrv.getComments(this.activeItemId);
+        }
+    }, {
+        key: 'removeItem',
+        value: function removeItem(item) {
+            this.itemsSrv.remove(item.id);
+            if (item.id === this.activeItemId) {
+                this.comments = null;
+                this.activeItemId = null;
+            }
+            this.items = this.itemsSrv.getData();
+        }
+    }, {
+        key: 'activateItem',
+        value: function activateItem(item) {
+            this.activeItemId = item.id;
+            this.comments = this.commentsSrv.getComments(this.activeItemId);
+        }
+    }, {
+        key: 'addComment',
+        value: function addComment(comment) {
+            this.commentsSrv.add(comment, this.activeItemId);
+            this.comments = this.commentsSrv.getComments(this.activeItemId);
+        }
+    }]);
+
+    return AppController;
+}();
 
 /***/ }),
 /* 5 */
@@ -33546,16 +33612,84 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-var _items = __webpack_require__(7);
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var CommentsController = exports.CommentsController = function () {
+    function CommentsController() {
+        _classCallCheck(this, CommentsController);
+    }
+
+    _createClass(CommentsController, [{
+        key: 'add',
+        value: function add(event, comment) {
+            if (event.which !== 13) {
+                return;
+            }
+            if (comment) {
+                this.onAddComment({ comment: comment });
+                this.comment = '';
+            }
+            event.preventDefault();
+        }
+    }]);
+
+    return CommentsController;
+}();
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _comments = __webpack_require__(6);
+
+exports.default = {
+    controller: _comments.CommentsController,
+    controllerAs: "$ctrl",
+    templateUrl: "components/comments/comments.html",
+    bindings: {
+        comments: "=",
+        activeItemId: "=",
+        onAddComment: "&"
+    }
+};
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _items = __webpack_require__(9);
 
 exports.default = {
     controller: _items.ItemsController,
     controllerAs: "$ctrl",
-    templateUrl: "components/items/items.html"
+    templateUrl: "components/items/items.html",
+    bindings: {
+        items: "=",
+        activeItemId: "=",
+        onAddItem: "&",
+        onRemoveItem: "&",
+        onActivateItem: "&"
+    }
 };
 
 /***/ }),
-/* 7 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -33569,31 +33703,43 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var ItemsController = function () {
-    function ItemsController(itemsSrv) {
+var ItemsController = exports.ItemsController = function () {
+    function ItemsController(itemsSrv, commentsSrv) {
         _classCallCheck(this, ItemsController);
 
-        this.itemsSrv = itemsSrv;
+        // this.itemsSrv = itemsSrv;
+        this.commentsSrv = commentsSrv;
         this.newItem = {};
-        this.newItem.name = 'UNO';
-        console.log("!!!");
     }
 
     _createClass(ItemsController, [{
-        key: 'add',
+        key: "add",
         value: function add(item) {
-            //this.itemsSrv.add(item);
-            console.log('!');
+            this.onAddItem({ item: item });
+            this.newItem = {};
+        }
+    }, {
+        key: "remove",
+        value: function remove(item) {
+            this.onRemoveItem({ item: item });
+        }
+    }, {
+        key: "getComments",
+        value: function getComments(id) {
+            return this.commentsSrv.getComments(id);
+        }
+    }, {
+        key: "activate",
+        value: function activate(item) {
+            this.onActivateItem({ item: item });
         }
     }]);
 
     return ItemsController;
 }();
 
-exports.default = ItemsController;
-
 /***/ }),
-/* 8 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -33615,7 +33761,71 @@ angular.element(document).ready(function () {
 });
 
 /***/ }),
-/* 9 */
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var CommentsService = function () {
+    function CommentsService(utilsSrv, itemsSrv) {
+        _classCallCheck(this, CommentsService);
+
+        this.utilsSrv = utilsSrv;
+        this.itemsSrv = itemsSrv;
+    }
+
+    _createClass(CommentsService, [{
+        key: "add",
+        value: function add(commentText, itemId) {
+            var items = this.itemsSrv.getData();
+            var index = items.findIndex(function (x) {
+                return Number(x.id) === Number(itemId);
+            });
+            if (!items[index].comments) {
+                items[index].comments = [];
+            }
+            items[index].comments.push({
+                id: this.utilsSrv.generateNextId(items[index].comments.map(function (comment) {
+                    return comment.id;
+                })),
+                comment: commentText
+            });
+            this.itemsSrv.setData(items);
+        }
+    }, {
+        key: "getComments",
+        value: function getComments(itemId) {
+            var items = this.itemsSrv.getData();
+            return items.find(function (item) {
+                return item.id === itemId;
+            }).comments;
+        }
+    }], [{
+        key: "createInstance",
+        value: function createInstance(utilsSrv, itemsSrv) {
+            if (!CommentsService.instance) {
+                CommentsService.instance = new CommentsService(utilsSrv, itemsSrv);
+            }
+            return CommentsService.instance;
+        }
+    }]);
+
+    return CommentsService;
+}();
+
+exports.default = CommentsService;
+
+/***/ }),
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -33650,20 +33860,28 @@ var ItemsService = function () {
         key: 'add',
         value: function add(item) {
             var items = this.getData();
+            var newId = this.utilsSrv.generateNextId(items.map(function (item) {
+                return item.id;
+            }));
             items.push({
-                id: this.utilsSrv.generateNextId(items.map(function (item) {
-                    return item.id;
-                })),
+                id: newId,
                 name: item.name
             });
             this.setData(items);
-            console.log(this.getData());
+            return newId;
+        }
+    }, {
+        key: 'remove',
+        value: function remove(id) {
+            var items = this.getData();
+            this.utilsSrv.removeItemById(items, id);
+            this.setData(items);
         }
     }], [{
         key: 'createInstance',
-        value: function createInstance() {
+        value: function createInstance(utilsSrv) {
             if (!ItemsService.instance) {
-                ItemsService.instance = new ItemsService();
+                ItemsService.instance = new ItemsService(utilsSrv);
             }
             return ItemsService.instance;
         }
@@ -33675,7 +33893,7 @@ var ItemsService = function () {
 exports.default = ItemsService;
 
 /***/ }),
-/* 10 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
