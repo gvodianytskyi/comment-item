@@ -1,0 +1,34 @@
+<section class="section section_items">
+    <header class="section__header section__header_items">
+        Items
+    </header>
+    <div class="section__body section__body_items">
+        <input class="input input_text rounded"
+               placeholder="Type name here..."
+               ng-model="$ctrl.newItem.name"
+               ng-keypress="($event.which === 13 && $ctrl.newItem.name) ? $ctrl.add($ctrl.newItem) : 0">
+        <button class="button button_add rounded"
+                ng-click="$ctrl.add($ctrl.newItem)"
+                ng-class="{'button_disabled': !$ctrl.newItem.name}">Add new</button>
+
+        <div class="items-list">
+            <div class="items-list__item"
+                    ng-repeat="item in $ctrl.items">
+                <div ng-class="{'active-marker': item.id === $ctrl.activeItemId}"></div>
+                <a class="link items-list__item-name"
+                    ng-click="$ctrl.activate(item)">
+                    {{item.name | limitTo: 30 }}{{item.name.length > 30 ? '...' : ''}}
+                </a>
+                <div class="items-list__item-comments"
+                        ng-if="$ctrl.getComments(item.id).length > 0"
+                        ng-click="$ctrl.activate(item)">
+                    <label class="items-list__item-comments-num">{{$ctrl.getComments(item.id).length}}</label>
+                </div>
+                <button class="button button_delete rounded right"
+                        ng-click="$ctrl.remove(item)">
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
